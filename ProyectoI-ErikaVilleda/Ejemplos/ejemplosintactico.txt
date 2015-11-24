@@ -1,0 +1,39 @@
+// Programa de ejemplo en lenguaje decaf
+class Program
+{
+   int i,j,k;
+   bool b1;
+   int a1[50];
+   bool b1[40];
+   int b[50];
+
+   void main()
+   {
+      int a, c;
+      bool s,t;
+
+      a = callout(max,b);
+      if (a < 100 && a > 10)
+      {
+         s = true;
+         t = false;
+      }
+   }
+
+   int max(int x)
+   {
+      int tmp;
+      tmp = 0;
+      miMax = 0;
+      while (tmp < 50)
+      {
+         bool otro;
+         if (x > miMax)
+         {
+            miMax = x;
+            otro = false;
+         }
+      }
+      return miMax;
+   }
+}
