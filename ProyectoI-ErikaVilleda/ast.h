@@ -11,6 +11,8 @@ extern map<string, int> vars_type;  // 0 Int; 1 Bool
 extern map<string, int> vars;
 extern map<string, int> nmethods;
 
+enum Type_v { INT, BOOL, VOID, _NULL};
+
 class Expr;
 class Statement;
 typedef list<Expr*> ExprList;
@@ -73,6 +75,20 @@ public:
     EQExpr(Expr *expr1, Expr *expr2): BinaryExpr(expr1, expr2) {}
 
     int evaluate() { return expr1->evaluate() == expr2->evaluate(); }
+};
+
+class ORExpr: public BinaryExpr{
+public:
+    ORExpr(Expr *expr1, Expr *expr2): BinaryExpr(expr1, expr2) {}
+
+    int evaluate() { return expr1->evaluate() || expr2->evaluate(); }
+};
+
+class ANDExpr: public BinaryExpr{
+public:
+    ANDExpr(Expr *expr1, Expr *expr2): BinaryExpr(expr1, expr2) {}
+
+    int evaluate() { return expr1->evaluate() && expr2->evaluate(); }
 };
 
 class AddExpr: public BinaryExpr {
@@ -208,7 +224,8 @@ public:
 
 class AssignStatement: public Statement {
 public:
-    AssignStatement(string id, Expr *expr) {
+    AssignStatement(Type_v type_v, string id, Expr *expr) {
+        this->type_v = type_v;
         this->id = id;
         this->expr = expr;
     }
@@ -216,6 +233,7 @@ public:
     void execute();
     StatementKind getKind() { return ASSIGN_STATEMENT; }
 
+    Type_v type_v;
     string id;
     Expr *expr;
 };
@@ -283,29 +301,29 @@ public:
 
 class DeclarationStatement: public Statement{
 public:
-    DeclarationStatement(int vt, Expr *ilist){
-        this -> vt = vt;
+    DeclarationStatement(Type_v type_v, ExprList *ilist){
+        this -> type_v = type_v;
         this-> ilist = ilist;
     }
     void execute();
     StatementKind getKind() { return DECLARATION_STATEMENT; }
 
-    int vt; //type 0 int, 1 bool
-    Expr *ilist;
+    Type_v type_v;
+    ExprList *ilist;
 };
 
 class ProgramStatement: public Statement{
 public:
-  ProgramStatement(Statement *vars, Statement *mvoid, Statement *methods) {
-                              this->vars = vars;
-                              this->mvoid = mvoid;
+  ProgramStatement(string id, StatementList *header, Statement *methods) {
+                              this->id = id;
+                              this->header = header;
                               this->methods=methods;
                             }
   void execute();
   StatementKind getKind(){ return PROGRAM_STATEMENT; }
 
-  Statement *vars;
-  Statement *mvoid;
+  string id;
+  StatementList *header;
   Statement *methods;
 
 };
@@ -319,7 +337,7 @@ public:
                               this->block = block;
                             }
   void execute();
-  StatementKind getKind() { return METHOD_STATEMENT; }
+  StatementKind getKind() { printf("%s\n", "getKind (METHOD_STATEMENT)");  return METHOD_STATEMENT; }
 
   int type;
   string id;

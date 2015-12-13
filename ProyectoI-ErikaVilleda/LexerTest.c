@@ -1,6 +1,8 @@
 class GreatestCommonDivisor {
   int a = 10;
   int b = 20;
+  //int y, j, k;
+  int y = 9;
   void main() {
     int x, y, z;
     x = a;

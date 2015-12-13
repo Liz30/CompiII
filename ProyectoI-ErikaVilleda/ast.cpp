@@ -24,6 +24,7 @@ void BlockStatement::execute()
 
         st->execute();
         it++;
+        printf("%s\n", st->getKind());
     }
 }
 
@@ -46,8 +47,8 @@ void PrintStatement::execute()
 void AssignStatement::execute()
 {
     printf("AssignStatement\n");
-    int result = expr->evaluate();
-    vars[id] = result;
+    //int result = expr->evaluate();
+    //vars[id] = result;
 }
 
 void AssignStatementArray::execute()
@@ -103,8 +104,8 @@ void ProgramStatement::execute()
     it++;
   }*/
 
-  mvoid->execute();
-  methods->execute();
+  //methods->execute();
+  //methods->execute();
 }
 
 void MethodStatement::execute()
