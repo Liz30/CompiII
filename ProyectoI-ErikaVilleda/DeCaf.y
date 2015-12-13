@@ -38,18 +38,18 @@ Statement *input;
 %token TK_EOF TK_IGUAL TK_SUMA TK_RESTA TK_MULT TK_DIV TK_MOD TK_ASIG
 %token TK_NEG TK_BIZQ TK_BDER OP_AND OP_OR OP_LT OP_LTE OP_NE OP_GT OP_GTE
 %type<t> t_var
-%type<expr_t> expra expr term factor
-%type<statement_t>  assignmentH declaration header
-%type<sList_t> headerList
-%type<eList_t> elist
+%type<expr_t> expra expr term factor argument
+%type<statement_t>  assignmentH declaration header method
+%type<sList_t> headerList methodsList
+%type<eList_t> elist argumentList
 %type<num_t> array
 
 %%
 
-input: KW_CLASS ID '{' headerList '}' {
+input: KW_CLASS ID '{' headerList methodsList '}' {
                                               string id=$2;
                                               free($2);
-                                              input = new ProgramStatement (id, $4, 0); }
+                                              input = new ProgramStatement (id, $4, $5); }
 ;
 
 headerList: headerList header {
@@ -60,7 +60,6 @@ headerList: headerList header {
                       $$ = new StatementList;
                       $$->push_back($1);
                    }
-         |         { $$ = 0; }
 ;
 
 header: assignmentH  { $$ = $1; }
@@ -76,7 +75,6 @@ assignmentH: t_var ID TK_ASIG expr ';' {
 
 t_var: KW_INT { $$ = INT; }
     | KW_BOOL { $$ = BOOL; }
-    | KW_VOID { $$ = VOID; }
 ;
 
 declaration: t_var elist ';' {
@@ -88,14 +86,17 @@ elist: elist ',' ID array {
                         string id = $3;
                         free($3);
                         $$ = $1;
-                        $$->push_back(new IdExpr(id));
+                        if ( $4 == 0 )
+                          $$->push_back(new IdExpr(_NULL, id));
+                        else
+                          $$->push_back(new ArrayExpr(id, $4))
                       }
       | ID array {
               string id = $1;
               free($1);
               $$ = new ExprList;
               if ( $2 == 0 )
-                $$->push_back(new IdExpr(id));
+                $$->push_back(new IdExpr(_NULL, id));
               else
                 $$->push_back(new ArrayExpr(id, $2))
             }
@@ -105,6 +106,43 @@ elist: elist ',' ID array {
 array: '[' NUM_INT ']'  { $$ = $2; }
       |                 { $$ = 0; }
 ;
+
+methodsList: methodsList method {
+                                  $$ = $1;
+                                  $$->push_back($2);
+                                }
+          | method {
+                      $$ = new StatementList;
+                      $$->push_back($1);
+                   }
+;
+
+method: t_var ID '(' argumentList ')' {
+                          string id = $2;
+                          free($2);
+                          $$ = new MethodStatement($1, id, $4, 0);
+                        }
+      | KW_VOID KW_MAIN '('')' { $$ = new MethodStatement(VOID, "MAIN", 0, 0); }
+;
+
+argumentList: argumentList ',' argument {
+                                  $$ = $1;
+                                  $$->push_back($3);
+                                }
+          | argument {
+                      $$ = new ExprList;
+                      $$->push_back($1);
+                   }
+          |        { $$ = 0;}
+;
+
+argument: t_var ID {
+                      string id = $2;
+                      free($2);
+                      $$ = new IdExpr($1, id);
+                    }
+;
+
 
 expr: expr OP_LT expra  { $$ = new LTExpr($1, $3); }
     | expr OP_GT expra  { $$ = new GTExpr($1, $3); }
@@ -138,7 +176,7 @@ factor: '(' expr ')'    { $$ = $2; }
         | ID            {
                             string id = $1;
                             free($1);
-                            $$ = new IdExpr(id);
+                            $$ = new IdExpr(_NULL, id);
                         }
         | KW_TRUE     { $$ = new BoolExpr("true"); }
         | KW_FALSE    { $$ = new BoolExpr("false"); }

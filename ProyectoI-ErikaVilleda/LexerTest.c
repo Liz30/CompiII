@@ -3,7 +3,7 @@ class GreatestCommonDivisor {
   int b = 20;
   //int y, j, k;
   int y = 9;
-  void main() {
+  void main(int y, bool t) {
     int x, y, z;
     x = a;
     y = b;

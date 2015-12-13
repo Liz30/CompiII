@@ -7,7 +7,7 @@
 
 using namespace std;
 
-extern map<string, int> vars_type;  // 0 Int; 1 Bool
+//extern map<string, int> vars_type;  // 0 Int; 1 Bool
 extern map<string, int> vars;
 extern map<string, int> nmethods;
 
@@ -136,9 +136,10 @@ public:
 
 class IdExpr: public Expr {
 public:
-    IdExpr(string id) { this->id = id; }
+    IdExpr(Type_v t, string id) { this->t = t; this->id = id; }
     int evaluate() { return vars[id]; }
 
+    Type_v t;
     string id;
 };
 
@@ -314,7 +315,7 @@ public:
 
 class ProgramStatement: public Statement{
 public:
-  ProgramStatement(string id, StatementList *header, Statement *methods) {
+  ProgramStatement(string id, StatementList *header, StatementList *methods) {
                               this->id = id;
                               this->header = header;
                               this->methods=methods;
@@ -324,13 +325,13 @@ public:
 
   string id;
   StatementList *header;
-  Statement *methods;
+  StatementList *methods;
 
 };
 
 class MethodStatement: public Statement{
 public:
-  MethodStatement(int type, string id, Statement *param, Statement *block){
+  MethodStatement(Type_v type, string id, ExprList *param, Statement *block){
                               this->type = type;
                               this->id = id;
                               this->param = param;
@@ -339,11 +340,11 @@ public:
   void execute();
   StatementKind getKind() { printf("%s\n", "getKind (METHOD_STATEMENT)");  return METHOD_STATEMENT; }
 
-  int type;
+  Type_v type;
   string id;
-  Statement *param;
+  ExprList *param;
   Statement *block;
-  // type 0 = int; 1 = bool; 9 = void
+    // si es void, tener un flag o buscar en la lista de methodos si ya existe el void MAIN
 };
 
 class MethodCallStatement: public Statement{
