@@ -17,7 +17,7 @@ map<string, int> vars_type; // 0 Int; 1 Bool
 void BlockStatement::execute()
 {
     printf("BlockStatement\n");
-    list<Statement *>::iterator it = stList.begin();
+    /*list<Statement *>::iterator it = stList.begin();
 
     while (it != stList.end()) {
         Statement *st = *it;
@@ -25,7 +25,7 @@ void BlockStatement::execute()
         st->execute();
         it++;
         printf("%s\n", st->getKind());
-    }
+    }*/
 }
 
 void PrintStatement::execute()

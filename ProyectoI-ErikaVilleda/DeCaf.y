@@ -38,9 +38,10 @@ Statement *input;
 %token TK_EOF TK_IGUAL TK_SUMA TK_RESTA TK_MULT TK_DIV TK_MOD TK_ASIG
 %token TK_NEG TK_BIZQ TK_BDER OP_AND OP_OR OP_LT OP_LTE OP_NE OP_GT OP_GTE
 %type<t> t_var
-%type<expr_t> expra expr term factor argument
-%type<statement_t>  assignmentH declaration header method
-%type<sList_t> headerList methodsList
+%type<expr_t> expra expr term factor argument arrayE
+%type<statement_t>  assignmentH declaration header method  st block
+%type<statement_t> assignmentE
+%type<sList_t> headerList methodsList declarationList stList
 %type<eList_t> elist argumentList
 %type<num_t> array
 
@@ -75,6 +76,16 @@ assignmentH: t_var ID TK_ASIG expr ';' {
 
 t_var: KW_INT { $$ = INT; }
     | KW_BOOL { $$ = BOOL; }
+;
+
+declarationList: declarationList declaration {
+                                                $$ = $1;
+                                                $$->push_back($2);
+                                              }
+              | declaration {
+                              $$ = new StatementList;
+                              $$->push_back($1);
+                            }
 ;
 
 declaration: t_var elist ';' {
@@ -117,12 +128,12 @@ methodsList: methodsList method {
                    }
 ;
 
-method: t_var ID '(' argumentList ')' {
+method: t_var ID '(' argumentList ')' block {
                           string id = $2;
                           free($2);
-                          $$ = new MethodStatement($1, id, $4, 0);
+                          $$ = new MethodStatement($1, id, $4, $6);
                         }
-      | KW_VOID KW_MAIN '('')' { $$ = new MethodStatement(VOID, "MAIN", 0, 0); }
+      | KW_VOID KW_MAIN '('')' block { $$ = new MethodStatement(VOID, "MAIN", 0, $5); }
 ;
 
 argumentList: argumentList ',' argument {
@@ -143,6 +154,42 @@ argument: t_var ID {
                     }
 ;
 
+block:  '{' declarationList stList '}' {
+                                          $$ = new BlockStatement($2, $3);
+                                       }
+;
+
+stList: stList st {
+                    $$ = $1;
+                    $$->push_back($2);
+                  }
+
+        | st        {
+                      $$ = new StatementList;
+                      $$->push_back($1);
+                    }
+        |           { $$ = 0; }
+;
+
+st: assignmentE ';' { $$ = $1; }
+;
+
+assignmentE: ID arrayE TK_ASIG expr {
+                                      string id = $1;
+                                      free($1);
+                                      if ($2==0)
+                                        $$ = new AssignStatement(_NULL, id, $4);
+                                      else
+                                      {
+                                        $$ = new AssignStatementArray(_NULL, id, $2, $4);
+                                      }
+                                    }
+;
+
+arrayE: '[' expr ']' { $$ = $2; }
+      |     { $$ = 0; }
+;
+
 
 expr: expr OP_LT expra  { $$ = new LTExpr($1, $3); }
     | expr OP_GT expra  { $$ = new GTExpr($1, $3); }
@@ -160,12 +207,12 @@ expr: expr OP_LT expra  { $$ = new LTExpr($1, $3); }
     | expra             { $$ = $1; }
 ;
 
-expra: expra '+' term   { $$ = new AddExpr($1, $3); }
-    | expra '-' term    { $$ = new SubExpr($1, $3); }
+expra: expra TK_SUMA term   { $$ = new AddExpr($1, $3); }
+    | expra TK_RESTA term    { $$ = new SubExpr($1, $3); }
     | term              { $$ = $1; }
 ;
 
-term: term '*' factor   { $$ = new MultExpr($1, $3); }
+term: term TK_MULT factor   { $$ = new MultExpr($1, $3); }
     | term '/' factor   { $$ = new DivExpr($1, $3); }
     | term '%' factor   { $$ = new ModExpr ($1, $3); }
     | factor            { $$ = $1; }

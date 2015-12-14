@@ -18,11 +18,6 @@ class Statement;
 typedef list<Expr*> ExprList;
 typedef list<Statement*> StatementList;
 
-enum ExpressionKind
-{
-  EXPRESSION
-};
-
 
 class Expr {
 public:
@@ -212,14 +207,11 @@ public:
 
 class BlockStatement: public Statement {
 public:
-    BlockStatement(StatementList *declaration, StatementList *stList) {
-                    this->stList = stList;
-                    this->declaration = declaration; }
+    BlockStatement(list<Statement *> stList) { this->stList = stList; }
     void execute();
     StatementKind getKind() { return BLOCK_STATEMENT; }
 
-    StatementList *declaration;
-    StatementList *stList;
+    list<Statement *> stList;
 };
 
 class PrintStatement: public Statement {
@@ -242,26 +234,24 @@ public:
     void execute();
     StatementKind getKind() { return ASSIGN_STATEMENT; }
 
-    Type_v type_v;  // si es null ya existe
+    Type_v type_v;
     string id;
     Expr *expr;
 };
 
 class AssignStatementArray: public Statement {
 public:
-    AssignStatementArray(Type_v type_v, string id, Expr *pos, Expr *expr){
+    AssignStatementArray(string id, int pos, Expr *expr){
         this->id = id;
         this->pos = pos;
         this->expr = expr;
-        this->type_v = type_v;
     }
     void execute();
     StatementKind getKind() { return ASSIGN_STATEMENT; }
 
     string id;
     Expr *expr;
-    Expr *pos;
-    Type_v type_v;
+    int pos;
 };
 
 class IfStatement: public Statement {
@@ -341,7 +331,7 @@ public:
 
 class MethodStatement: public Statement{
 public:
-  MethodStatement(Type_v type, string id, ExprList *param, Statement *block){
+  MethodStatement(Type_v type, string id, ExprList *param, StatementList *block){
                               this->type = type;
                               this->id = id;
                               this->param = param;
@@ -353,7 +343,7 @@ public:
   Type_v type;
   string id;
   ExprList *param;
-  Statement *block;
+  StatementList *block;
     // si es void, tener un flag o buscar en la lista de methodos si ya existe el void MAIN
 };
 

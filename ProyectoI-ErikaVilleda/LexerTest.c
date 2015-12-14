@@ -3,10 +3,12 @@ class GreatestCommonDivisor {
   int b = 20;
   //int y, j, k;
   int y = 9;
-  void main(int y, bool t) {
+  bool n() {
     int x, y, z;
+    bool f, t[8];
     x = a;
     y = b;
+    y[8+3] = (m+7)*3;
     z = gcd(x, y);
     print z;
   }
