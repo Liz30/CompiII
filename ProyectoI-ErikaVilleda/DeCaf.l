@@ -65,7 +65,7 @@ LETTER [a-zA-Z]
 "void"    { return KW_VOID; }
 "while"   { return KW_WHILE; }
 "main"    { return KW_MAIN; }
-"'"[^']*"'"         { yytext[yyleng-1] = '\0'; yylval.id_t = strdup(&yytext[1]); return STRING_LITERAL; }
+"\""[^']*"\""         { yytext[yyleng-1] = '\0'; yylval.id_t = strdup(&yytext[1]); return STRING_LITERAL; }
 
 {DIGIT}+            { yylval.num_t = atoi(yytext); return NUM_INT; }
 

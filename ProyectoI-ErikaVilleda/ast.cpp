@@ -127,3 +127,13 @@ void ReturnStatement::execute()
 {
   printf("ReturnStatement\n");
 }
+
+void BreakStatement::execute()
+{
+  printf("BreakStatement\n");
+}
+
+void ContinueStatement::execute()
+{
+  printf("ContinueStatement\n");
+}

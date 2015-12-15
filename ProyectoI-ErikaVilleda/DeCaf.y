@@ -38,11 +38,11 @@ Statement *input;
 %token TK_EOF TK_IGUAL TK_SUMA TK_RESTA TK_MULT TK_DIV TK_MOD TK_ASIG
 %token TK_NEG TK_BIZQ TK_BDER OP_AND OP_OR OP_LT OP_LTE OP_NE OP_GT OP_GTE
 %type<t> t_var
-%type<expr_t> expra expr term factor argument arrayE
-%type<statement_t>  assignmentH declaration header method  st block
-%type<statement_t> assignmentE
-%type<sList_t> headerList methodsList declarationList stList
-%type<eList_t> elist argumentList
+%type<expr_t> expra expr term factor argument arrayE exprOPT functionCall
+%type<statement_t>  assignmentH declaration header method  st block elseOPT
+%type<statement_t> assignmentE method_call
+%type<sList_t> headerList methodsList declarationList stList assignEList
+%type<eList_t> elist argumentList paramList idL
 %type<num_t> array
 
 %%
@@ -86,6 +86,7 @@ declarationList: declarationList declaration {
                               $$ = new StatementList;
                               $$->push_back($1);
                             }
+              |             { $$ = 0; }
 ;
 
 declaration: t_var elist ';' {
@@ -172,6 +173,72 @@ stList: stList st {
 ;
 
 st: assignmentE ';' { $$ = $1; }
+  | method_call ';' { $$ = $1; }
+  | KW_IF '(' expr ')' block elseOPT { $$ = new IfStatement($3, $5, $6); }
+  | KW_WHILE '(' expr ')' block { $$ = new WhileStatement($3, $5); }
+  | KW_FOR '(' paramList ';' expr ';' assignEList  ')' block { $$ = new ForStatement($3, $5, $7, $9); }
+  | KW_RETURN exprOPT ';' { $$ = new ReturnStatement($2); }
+  | KW_BREAK ';' { $$ = new BreakStatement(); }
+  | KW_CONTINUE ';' {}
+  | block { $$ = $1; }
+;
+
+exprOPT: expr { $$ = $1; }
+      |       { $$ = 0; }
+
+assignEList: assignEList ',' assignmentE {
+                                            $$ = $1;
+                                            $$->push_back($3);
+                                          }
+          | assignmentE {
+                          $$ = new StatementList;
+                          $$->push_back($1);
+                        }
+;
+
+elseOPT: KW_ELSE block { $$ = $2; }
+      |                { $$ = 0; }
+;
+
+method_call: ID '(' paramList ')' {
+                                    string id = $1;
+                                    free($1);
+                                    $$ = new MethodCallStatement(id, $3);
+                                  }
+          | KW_PRINT  paramList { $$ = new PrintStatement ($2); }
+          | KW_READ idL         { $$ = new ReadStatement($2); }
+;
+
+idL: idL ',' ID arrayE {
+                          string id = $3;
+                          free($3);
+                          $$ = $1;
+                          if ($4 == 0)
+                            $$->push_back(new IdExpr(_NULL, id));
+                          else
+                            $$->push_back(new ArrayExpr(id,(int)$4));
+                        }
+      | ID arrayE {
+                    $$ = new ExprList;
+                    string id = $1;
+                    free($1);
+                    if ($2 == 0)
+                      $$->push_back(new IdExpr(_NULL, id));
+                    else
+                      $$->push_back(new ArrayExpr(id,(int)$2));
+                   }
+      |            { $$ = 0; }
+;
+
+paramList: paramList ',' expr {
+                                  $$ = $1;
+                                  $$->push_back($3);
+                                }
+        | expr                 {
+                                  $$ = new ExprList;
+                                  $$->push_back($1);
+                                }
+        |                       { $$ = 0; }
 ;
 
 assignmentE: ID arrayE TK_ASIG expr {
@@ -188,6 +255,13 @@ assignmentE: ID arrayE TK_ASIG expr {
 
 arrayE: '[' expr ']' { $$ = $2; }
       |     { $$ = 0; }
+;
+
+functionCall: ID '(' paramList ')' {
+                                      string id = $1;
+                                      free($1);
+                                      $$ = new FunctionCallExpr(id, $3);
+                                    }
 ;
 
 
@@ -213,18 +287,27 @@ expra: expra TK_SUMA term   { $$ = new AddExpr($1, $3); }
 ;
 
 term: term TK_MULT factor   { $$ = new MultExpr($1, $3); }
-    | term '/' factor   { $$ = new DivExpr($1, $3); }
-    | term '%' factor   { $$ = new ModExpr ($1, $3); }
+    | term TK_DIV factor   { $$ = new DivExpr($1, $3); }
+    | term TK_MOD factor   { $$ = new ModExpr ($1, $3); }
     | factor            { $$ = $1; }
 ;
 
 factor: '(' expr ')'    { $$ = $2; }
-        | NUM_INT           { $$ = new NumExpr($1); }
-        | ID            {
+        | NUM_INT       { $$ = new NumExpr($1); }
+        | ID arrayE     {
                             string id = $1;
                             free($1);
-                            $$ = new IdExpr(_NULL, id);
+                            if ($2 == 0)
+                                $$ = new IdExpr(_NULL, id);
+                            else
+                                $$ = new ArrayExpr(id, (int)$2);
                         }
+        | STRING_LITERAL {
+                            string strl = $1;
+                            free($1);
+                            $$ = new StringExpr(strl);
+                          }
         | KW_TRUE     { $$ = new BoolExpr("true"); }
         | KW_FALSE    { $$ = new BoolExpr("false"); }
+        | functionCall { $$ = $1; }
 ;

@@ -201,7 +201,9 @@ enum StatementKind {
     METHOD_STATEMENT,
     METHODCALL_STATEMENT,
     READ_STATEMENT,
-    RETURN_STATEMENT
+    RETURN_STATEMENT,
+    BREAK_STATEMENT,
+    CONTINUE_STATEMENT
 };
 
 class Statement {
@@ -294,7 +296,7 @@ public:
 
 class ForStatement: public Statement{
 public:
-      ForStatement(ExprList *init, Expr *cond, Statement *count, Statement *block){
+      ForStatement(ExprList *init, Expr *cond, StatementList *count, Statement *block){
           this->init = init;
           this->cond = cond;
           this->count = count;
@@ -303,10 +305,10 @@ public:
 
       void execute();
       StatementKind getKind() { return FOR_STATEMENT; }
-
+      /// Validar que init no venga en 0
       ExprList *init;
       Expr *cond;
-      Statement *count;
+      StatementList *count;
       Statement *block;
 };
 
@@ -373,11 +375,11 @@ public:
 
 class ReadStatement: public Statement{
 public:
-    ReadStatement(Expr *e){ this -> e = e;}
+    ReadStatement(ExprList *e){ this -> e = e;}
     void execute();
     StatementKind getKind() { return READ_STATEMENT; }
 
-    Expr *e;
+    ExprList *e;
 };
 
 class ReturnStatement: public Statement{
@@ -387,6 +389,22 @@ public:
     StatementKind getKind() { return RETURN_STATEMENT; }
 
     Expr *e;
+};
+
+class BreakStatement: public Statement{
+public:
+    BreakStatement() {};//int flag) { this->flag = flag; }
+    void execute();
+    StatementKind getKind() { return BREAK_STATEMENT; }
+
+    //int flag; // 1 true; 0 false;
+};
+
+class ContinueStatement: public Statement{
+public:
+    ContinueStatement() {};
+    void execute();
+    StatementKind getKind() { return CONTINUE_STATEMENT; }
 };
 
 #endif
