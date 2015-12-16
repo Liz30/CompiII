@@ -12,12 +12,17 @@ class Program
       int a, c;
       bool s,t;
 
-      a = callout(max,b);
+      a = callout(max(r[(6+0999)*i]),b);
       if (a < 100 && a > 10)
       {
          s = true;
          t = false;
       }
+   }
+
+   void min (int y, bool g)
+   {
+      print "Erika";
    }
 
    int max(int x)

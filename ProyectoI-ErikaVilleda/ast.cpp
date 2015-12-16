@@ -1,18 +1,13 @@
 #include <cstdio>
 #include "ast.h"
 
-// extern enum VarType {INTEGER, BOOL};
-map<string, int> nmethods;
-map<string, int> vars;
+//enum Type_v { INT, BOOL, VOID, _NULL };
 
-struct varsT{
-  string id;
-  int value;
-  int type; // 0 Int; 1 Bool
-  int method; // 9 Main
-};
+map<string, Type_v> vars_type; //id, tipo
+map<string, int> size_arrays; // el tipo esta en vars_type, este es solo para saber el size
+map<string, int> vars_value; //contiene el valor de cada id, el resultado de evaluate()
 
-map<string, int> vars_type; // 0 Int; 1 Bool
+
 
 void BlockStatement::execute()
 {
@@ -48,7 +43,7 @@ void AssignStatement::execute()
 {
     printf("AssignStatement\n");
     //int result = expr->evaluate();
-    //vars[id] = result;
+    //vars_type[id] = result;
 }
 
 void AssignStatementArray::execute()
@@ -87,25 +82,54 @@ void ForStatement::execute()
 void DeclarationStatement::execute()
 {
   printf("DeclarationStatement\n");
+
+  ExprList::iterator it = ilist->begin();
+  while (it != ilist->end()){
+    Expr *e = *it;
+    if (e->getKind()==ID_EXPRESSION){
+        IdExpr *ie = (IdExpr*)e;
+        string i = ie->id;
+        vars_type[i] = type_v;
+        vars_value[i] = 0;
+        cout<<" ID Expression. ID: "<<i<<"  Tipo: "<<vars_type[i]<<"\n";
+    } else {
+        if (e->getKind()==ARRAY_EXPRESSION){
+            ArrayExpr *ae = (ArrayExpr*)e;
+            string i = ae->id;
+            size_arrays[i] = ae->size;
+            vars_type[i] = type_v;
+            cout<<" Array Expression. ID: "<<i<<"  Tipo: "<<vars_type[i]<<"  Size: "<<size_arrays[i]<<"\n";
+        }
+        else{
+                ErrorExpr *_error = new ErrorExpr(SEMANTIC, " Expression not recognized");
+                _error->show();
+        }
+    }
+    it++;
+  }
+  PrintStatement *p = new PrintStatement(ilist);
+  p->execute();
 }
 
 void ProgramStatement::execute()
 {
-  printf("ProgramStatement\n");
-  /*Statement *vars;
-  Statement *mvoid;
-  Statement *methods;*/
+  printf("\nProgramStatement\n\n");
 
-  /*Statement::iterator it = mvoid.begin();
-  while (it != mvoid.end()) {
+  StatementList::iterator it = header->begin();
+  while (it != header->end()) {
     Statement *st = *it;
 
     st->execute();
     it++;
-  }*/
+  }
 
-  //methods->execute();
-  //methods->execute();
+  StatementList::iterator itm = methods->begin();
+  while (itm != methods->end()) {
+    Statement *st = *itm;
+
+    st->execute();
+    itm++;
+  }
 }
 
 void MethodStatement::execute()

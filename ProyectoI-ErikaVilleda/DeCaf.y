@@ -44,6 +44,7 @@ Statement *input;
 %type<sList_t> headerList methodsList declarationList stList assignEList
 %type<eList_t> elist argumentList paramList idL
 %type<num_t> array
+%type<id_t> idVOID
 
 %%
 
@@ -134,7 +135,17 @@ method: t_var ID '(' argumentList ')' block {
                           free($2);
                           $$ = new MethodStatement($1, id, $4, $6);
                         }
-      | KW_VOID KW_MAIN '('')' block { $$ = new MethodStatement(VOID, "MAIN", 0, $5); }
+      | KW_VOID idVOID '(' argumentList ')' block {
+                                                     string id = $2;
+                                                     free($2);
+                                                     $$ = new MethodStatement(VOID, id, $4, $6);
+                                                  }
+;
+
+idVOID: ID {
+              $$=$1;
+            }
+      | KW_MAIN { $$ = (char*)"MAIN";}
 ;
 
 argumentList: argumentList ',' argument {

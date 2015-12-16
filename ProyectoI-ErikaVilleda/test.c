@@ -1,5 +1,5 @@
 class Test {
-  int a, b;
+  bool a, b;
   //bool o, i;
   int a = 90;
   //bool b = false;

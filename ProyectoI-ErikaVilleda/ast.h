@@ -3,15 +3,14 @@
 
 #include <string>
 #include <list>
+#include <iostream>
 #include <map>
 
 using namespace std;
 
-//extern map<string, int> vars_type;  // 0 Int; 1 Bool
-extern map<string, int> vars;
-extern map<string, int> nmethods;
-
-enum Type_v { INT, BOOL, VOID, _NULL};
+enum Type_v { INT, BOOL, VOID, _NULL };
+enum Type_e { SINTAX, SEMANTIC };
+extern map<string, Type_v> vars_type;
 
 class Expr;
 class Statement;
@@ -20,13 +19,35 @@ typedef list<Statement*> StatementList;
 
 enum ExpressionKind
 {
-  EXPRESSION
+  EXPRESSION,
+  BINARY_EXPRESSION,
+  LESSTHAN_EXPRESSION,
+  GREATERTHAN_EXPRESSION,
+  LESSTHANEQUAL_EXPRESSION,
+  GREATERTHANEQUAL_EXPRESSION,
+  EQUAL_EXPRESSION,
+  NOTEQUAL_EXPRESSION,
+  OR_EXPRESSION,
+  AND_EXPRESSION,
+  ADD_EXPRESSION,
+  SUB_EXPRESSION,
+  MULT_EXPRESSION,
+  DIV_EXPRESSION,
+  MOD_EXPRESSION,
+  ID_EXPRESSION,
+  NUM_EXPRESSION,
+  STRING_EXPRESSION,
+  BOOL_EXPRESSION,
+  ARRAY_EXPRESSION,
+  FUNCTION_EXPRESSION,
+  ERROR_EXPRESSION
 };
 
 
 class Expr {
 public:
     virtual int evaluate() = 0;
+    virtual ExpressionKind getKind() = 0;
 };
 
 class BinaryExpr: public Expr {
@@ -35,6 +56,7 @@ public:
         this->expr1 = expr1;
         this->expr2 = expr2;
     }
+    ExpressionKind getKind() { return BINARY_EXPRESSION; }
 
     Expr *expr1;
     Expr *expr2;
@@ -44,6 +66,8 @@ class LTExpr: public BinaryExpr {
 public:
     LTExpr(Expr *expr1, Expr *expr2): BinaryExpr(expr1, expr2) {}
 
+    ExpressionKind getKind() { return LESSTHAN_EXPRESSION; }
+
     int evaluate() { return expr1->evaluate() < expr2->evaluate(); }
 };
 
@@ -52,6 +76,7 @@ public:
     GTExpr(Expr *expr1, Expr *expr2): BinaryExpr(expr1, expr2) {}
 
     int evaluate() { return expr1->evaluate() > expr2->evaluate(); }
+    ExpressionKind getKind() { return GREATERTHAN_EXPRESSION; }
 };
 
 class LTEExpr: public BinaryExpr {
@@ -59,6 +84,7 @@ public:
     LTEExpr(Expr *expr1, Expr *expr2): BinaryExpr(expr1, expr2) {}
 
     int evaluate() { return expr1->evaluate() <= expr2->evaluate(); }
+    ExpressionKind getKind() { return LESSTHANEQUAL_EXPRESSION; }
 };
 
 class GTEExpr: public BinaryExpr {
@@ -66,6 +92,7 @@ public:
     GTEExpr(Expr *expr1, Expr *expr2): BinaryExpr(expr1, expr2) {}
 
     int evaluate() { return expr1->evaluate() >= expr2->evaluate(); }
+    ExpressionKind getKind() { return GREATERTHANEQUAL_EXPRESSION;}
 };
 
 class NEExpr: public BinaryExpr {
@@ -73,6 +100,7 @@ public:
     NEExpr(Expr *expr1, Expr *expr2): BinaryExpr(expr1, expr2) {}
 
     int evaluate() { return expr1->evaluate() != expr2->evaluate(); }
+    ExpressionKind getKind() { return NOTEQUAL_EXPRESSION; }
 };
 
 class EQExpr: public BinaryExpr {
@@ -80,6 +108,7 @@ public:
     EQExpr(Expr *expr1, Expr *expr2): BinaryExpr(expr1, expr2) {}
 
     int evaluate() { return expr1->evaluate() == expr2->evaluate(); }
+    ExpressionKind getKind() {return EQUAL_EXPRESSION; }
 };
 
 class ORExpr: public BinaryExpr{
@@ -87,6 +116,7 @@ public:
     ORExpr(Expr *expr1, Expr *expr2): BinaryExpr(expr1, expr2) {}
 
     int evaluate() { return expr1->evaluate() || expr2->evaluate(); }
+    ExpressionKind getKind() {return OR_EXPRESSION; }
 };
 
 class ANDExpr: public BinaryExpr{
@@ -94,6 +124,7 @@ public:
     ANDExpr(Expr *expr1, Expr *expr2): BinaryExpr(expr1, expr2) {}
 
     int evaluate() { return expr1->evaluate() && expr2->evaluate(); }
+    ExpressionKind getKind() {return AND_EXPRESSION; }
 };
 
 class AddExpr: public BinaryExpr {
@@ -101,6 +132,7 @@ public:
     AddExpr(Expr *expr1, Expr *expr2): BinaryExpr(expr1, expr2) {}
 
     int evaluate() { return expr1->evaluate() + expr2->evaluate(); }
+    ExpressionKind getKind() {return ADD_EXPRESSION;}
 };
 
 class SubExpr: public BinaryExpr {
@@ -108,6 +140,7 @@ public:
     SubExpr(Expr *expr1, Expr *expr2): BinaryExpr(expr1, expr2) {}
 
     int evaluate() { return expr1->evaluate() - expr2->evaluate(); }
+    ExpressionKind getKind() { return SUB_EXPRESSION;}
 };
 
 class MultExpr: public BinaryExpr {
@@ -115,6 +148,7 @@ public:
     MultExpr(Expr *expr1, Expr *expr2): BinaryExpr(expr1, expr2) {}
 
     int evaluate() { return expr1->evaluate() * expr2->evaluate(); }
+    ExpressionKind getKind() {return MULT_EXPRESSION;}
 };
 
 class DivExpr: public BinaryExpr {
@@ -122,6 +156,7 @@ public:
     DivExpr(Expr *expr1, Expr *expr2): BinaryExpr(expr1, expr2) {}
 
     int evaluate() { return expr1->evaluate() / expr2->evaluate(); }
+    ExpressionKind getKind() {return DIV_EXPRESSION;}
 };
 
 class ModExpr: public BinaryExpr{
@@ -129,12 +164,14 @@ public:
     ModExpr(Expr *expr1, Expr *expr2): BinaryExpr(expr1, expr2) {}
 
     int evaluate() { return expr1->evaluate() % expr2 -> evaluate(); }
+    ExpressionKind getKind() {return MOD_EXPRESSION;}
 };
 
 class NumExpr: public Expr {
 public:
     NumExpr(int value) { this->value = value; }
     int evaluate() { return value; }
+    ExpressionKind getKind() {return NUM_EXPRESSION;}
 
     int value;
 };
@@ -142,7 +179,8 @@ public:
 class IdExpr: public Expr {
 public:
     IdExpr(Type_v t, string id) { this->t = t; this->id = id; }
-    int evaluate() { return vars[id]; }
+    int evaluate() { return vars_type[id]; }
+    ExpressionKind getKind() {return ID_EXPRESSION;}
 
     Type_v t;
     string id;
@@ -152,6 +190,7 @@ class StringExpr: public Expr {
 public:
     StringExpr(string &str) { this->str = str; }
     int evaluate() { return 0 ; }
+    ExpressionKind getKind() {return STRING_EXPRESSION;}
     string str;
 };
 
@@ -159,6 +198,7 @@ class BoolExpr: public Expr{
 public:
     BoolExpr(string value) { this->value = value; }
     int evaluate() { if (value=="true") return 1; return 0;}
+    ExpressionKind getKind() { return BOOL_EXPRESSION;}
     string value;
 };
 
@@ -169,6 +209,7 @@ public:
                                     this->size = size;
                                   }
     int evaluate(){ return 0; } //Validar que size sea > 0
+    ExpressionKind getKind(){return ARRAY_EXPRESSION; }
     string id;
     int size;
     //int type; // Todos los arreglos los manejo tipo enteros
@@ -183,9 +224,34 @@ public:
 
   int evaluate() {//recorrer param y evaluar//
                   return 0; }
+  ExpressionKind getKind(){return FUNCTION_EXPRESSION;}
 
   string id;
   ExprList *param;
+};
+
+class ErrorExpr: public Expr{
+public:
+    ErrorExpr(Type_e t, string msg){
+        this->t = t;
+        this->msg = msg;
+    }
+
+    int evaluate() { return 0;}
+    ExpressionKind getKind() { return ERROR_EXPRESSION;}
+    void show(){
+        cout<<getTxt()<<" Error. "<<msg<<"\n";
+    }
+
+    string getTxt()
+    {
+        if (t==0)
+          return "SINTAX";
+        return "SEMANTIC";
+    }
+
+    Type_e t;
+    string msg;
 };
 
 
@@ -316,7 +382,7 @@ class DeclarationStatement: public Statement{
 public:
     DeclarationStatement(Type_v type_v, ExprList *ilist){
         this -> type_v = type_v;
-        this-> ilist = ilist;
+        this-> ilist = ilist; //validar que sean expression id
     }
     void execute();
     StatementKind getKind() { return DECLARATION_STATEMENT; }
