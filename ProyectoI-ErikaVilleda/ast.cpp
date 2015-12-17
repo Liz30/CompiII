@@ -1,12 +1,21 @@
 #include <cstdio>
 #include "ast.h"
 
-//enum Type_v { INT, BOOL, VOID, _NULL };
-
+// Si id esta en vars_type ya existe
 map<string, Type_v> vars_type; //id, tipo
 map<string, int> size_arrays; // el tipo esta en vars_type, este es solo para saber el size
 map<string, int> vars_value; //contiene el valor de cada id, el resultado de evaluate()
+map<string, int*> arrays_value; // id, int[]. Valores de los arreglos
 
+bool v_main = false;
+map<string, Type_v> methods_type;
+map<string, string> methods_var;
+map<string, Type_v> vars_type_temp;
+map<string, int> size_arrays_temp; // el tipo esta en vars_type, este es solo para saber el size
+map<string, int> vars_value_temp; //contiene el valor de cada id, el resultado de evaluate()
+map<string, int*> arrays_value_temp; // id, int[]. Valores de los arreglos
+
+map<string, int> methods_on;  // 1 activo, 0 inactivo (lugar libre)
 
 
 void BlockStatement::execute()
@@ -41,14 +50,36 @@ void PrintStatement::execute()
 
 void AssignStatement::execute()
 {
-    printf("AssignStatement\n");
-    //int result = expr->evaluate();
-    //vars_type[id] = result;
+    printf("\nAssignStatement\n");
+
+    if (type_v != _NULL){   // aun no se ha declarado
+      ExprList *ne = new ExprList;
+      ne->push_back(new IdExpr(type_v, id));
+      DeclarationStatement *n = new DeclarationStatement(type_v, ne);
+      n->execute();
+    }
+    int result = expr->evaluate();
+    vars_value[id] = result;
+
+    cout<<" ID : "<<id<<"  Tipo: "<<vars_type[id]<<"  Result: "<<vars_value[id]<<"\n";
 }
 
 void AssignStatementArray::execute()
 {
-  printf("AssignStatementArray\n");
+  printf("\n\nAssignStatementArray\n");
+  if (type_v != _NULL){   // caso: int y[6] = 36; Incorrecto
+    ErrorExpr *e = new ErrorExpr(SEMANTIC, " \n");
+    e->show();
+  }
+  else{
+    int r = expr->evaluate();
+    int p = pos->evaluate();
+    // Evaluar tipo??
+    arrays_value[id][p] = r;
+  }
+  // testing
+  for (int j=0; j<size_arrays[id]; j++)
+      cout<<" value["<<id<<"]["<<j<<"]: "<<arrays_value[id][j]<<"\n";
 }
 
 void IfStatement::execute()
@@ -91,14 +122,26 @@ void DeclarationStatement::execute()
         string i = ie->id;
         vars_type[i] = type_v;
         vars_value[i] = 0;
-        cout<<" ID Expression. ID: "<<i<<"  Tipo: "<<vars_type[i]<<"\n";
+        cout<<" ID : "<<i<<"  Tipo: "<<vars_type[i]<<"\n";
     } else {
         if (e->getKind()==ARRAY_EXPRESSION){
             ArrayExpr *ae = (ArrayExpr*)e;
             string i = ae->id;
-            size_arrays[i] = ae->size;
-            vars_type[i] = type_v;
-            cout<<" Array Expression. ID: "<<i<<"  Tipo: "<<vars_type[i]<<"  Size: "<<size_arrays[i]<<"\n";
+            if (ae->size > 0){
+                size_arrays[i] = ae->size;
+                vars_type[i] = type_v;
+                arrays_value[i] = new int[ae->size];
+
+                cout<<" ID: "<<i<<"  Tipo: "<<vars_type[i]<<"  Size: "<<size_arrays[i]<<"\n";
+                for (int y=0; y<size_arrays[i]; y++)
+                    arrays_value[i][y] = 0;
+                for (int j=0; j<size_arrays[i]; j++)
+                    cout<<" value["<<i<<"]["<<j<<"]: "<<arrays_value[i][j]<<"\n";
+            }
+            else{
+                ErrorExpr *_error = new ErrorExpr(SINTAX, " Expected size greater than zero");
+              _error->show();
+            }
         }
         else{
                 ErrorExpr *_error = new ErrorExpr(SEMANTIC, " Expression not recognized");
@@ -107,8 +150,6 @@ void DeclarationStatement::execute()
     }
     it++;
   }
-  PrintStatement *p = new PrintStatement(ilist);
-  p->execute();
 }
 
 void ProgramStatement::execute()
@@ -134,7 +175,18 @@ void ProgramStatement::execute()
 
 void MethodStatement::execute()
 {
-  printf("MethodStatement\n");
+  printf("\n\nMethodStatement\n");
+
+  /*Type_v type;
+  string id;
+  ExprList *param;
+  Statement *block;*/
+
+  if ( (id == "MAIN") && v_main ){ // Es void
+    // definir main
+  }
+
+
 }
 
 void MethodCallStatement::execute()

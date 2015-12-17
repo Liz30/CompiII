@@ -10,7 +10,11 @@ using namespace std;
 
 enum Type_v { INT, BOOL, VOID, _NULL };
 enum Type_e { SINTAX, SEMANTIC };
-extern map<string, Type_v> vars_type;
+extern map<string, Type_v> vars_type; // id, tipo
+extern map<string, int> size_arrays; // id, size. el tipo esta en vars_type, este es solo para saber el size
+extern map<string, int> vars_value;  // id, valor
+extern map<string, int*> arrays_value; // id, int[];
+extern bool v_main;
 
 class Expr;
 class Statement;
@@ -179,7 +183,7 @@ public:
 class IdExpr: public Expr {
 public:
     IdExpr(Type_v t, string id) { this->t = t; this->id = id; }
-    int evaluate() { return vars_type[id]; }
+    int evaluate() { return vars_value[id]; }
     ExpressionKind getKind() {return ID_EXPRESSION;}
 
     Type_v t;
