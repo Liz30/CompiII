@@ -1,6 +1,8 @@
 #include <cstdio>
 #include "ast.h"
 
+extern int line;
+
 // Si id esta en vars_type ya existe
 map<string, Type_v> vars_type; //id, tipo
 map<string, int> size_arrays; // el tipo esta en vars_type, este es solo para saber el size
@@ -8,8 +10,9 @@ map<string, int> vars_value; //contiene el valor de cada id, el resultado de eva
 map<string, int*> arrays_value; // id, int[]. Valores de los arreglos
 
 bool v_main = false;
-map<string, Type_v> methods_type;
-map<string, string> methods_var;
+map<string, Type_v> methods_type; // Tipo de cada metodo
+map<string, string> methods_var; // idMethod, id. Variables de cada metodo
+map<string, int> methods_value; // IDMethod, value.  Valor que retorna cada metodo.
 map<string, Type_v> vars_type_temp;
 map<string, int> size_arrays_temp; // el tipo esta en vars_type, este es solo para saber el size
 map<string, int> vars_value_temp; //contiene el valor de cada id, el resultado de evaluate()
@@ -17,10 +20,24 @@ map<string, int*> arrays_value_temp; // id, int[]. Valores de los arreglos
 
 map<string, int> methods_on;  // 1 activo, 0 inactivo (lugar libre)
 
+bool existVar(string id)
+{
+    map<string, Type_v>::iterator it = vars_type.find(id);
+    if ( it != vars_type.end())
+        return true;
+    return false;
+}
+
+bool existMeth(string id){
+    map<string, Type_v>::iterator it = methods_type.find(id);
+    if ( it != methods_type.end())
+        return true;
+    return false;
+}
 
 void BlockStatement::execute()
 {
-    printf("BlockStatement\n");
+    printf("\nBlockStatement\n");
     /*list<Statement *>::iterator it = stList.begin();
 
     while (it != stList.end()) {
@@ -52,34 +69,45 @@ void AssignStatement::execute()
 {
     printf("\nAssignStatement\n");
 
-    if (type_v != _NULL){   // aun no se ha declarado
+    if (type_v != _NULL){   // aun no se ha declarado int a = 9;
       ExprList *ne = new ExprList;
       ne->push_back(new IdExpr(type_v, id));
       DeclarationStatement *n = new DeclarationStatement(type_v, ne);
       n->execute();
     }
-    int result = expr->evaluate();
-    vars_value[id] = result;
-
-    cout<<" ID : "<<id<<"  Tipo: "<<vars_type[id]<<"  Result: "<<vars_value[id]<<"\n";
+    if ( existVar(id) ) { // La encontro
+        int result = expr->evaluate();
+        vars_value[id] = result;
+        cout<<" ID : "<<id<<"  Tipo: "<<vars_type[id]<<"  Result: "<<vars_value[id]<<"\n";
+    }
+    else{
+        ErrorExpr *e = new ErrorExpr(SEMANTIC, " ID is not found\n", line);
+        e->show();
+    }
 }
 
 void AssignStatementArray::execute()
 {
   printf("\n\nAssignStatementArray\n");
   if (type_v != _NULL){   // caso: int y[6] = 36; Incorrecto
-    ErrorExpr *e = new ErrorExpr(SEMANTIC, " \n");
+    ErrorExpr *e = new ErrorExpr(SEMANTIC, " \n", line);
     e->show();
   }
   else{
-    int r = expr->evaluate();
-    int p = pos->evaluate();
-    // Evaluar tipo??
-    arrays_value[id][p] = r;
+    if ( !existVar(id) ){
+          ErrorExpr *e = new ErrorExpr(SEMANTIC, " ID: "+id+" is not found \n", line);
+          e->show();
+    }
+    else{
+        int r = expr->evaluate();
+        int p = pos->evaluate();
+        // Evaluar tipo??
+        arrays_value[id][p] = r;
+        for (int j=0; j<size_arrays[id]; j++)
+            cout<<" value["<<id<<"]["<<j<<"]: "<<arrays_value[id][j]<<"\n";
+
+    }
   }
-  // testing
-  for (int j=0; j<size_arrays[id]; j++)
-      cout<<" value["<<id<<"]["<<j<<"]: "<<arrays_value[id][j]<<"\n";
 }
 
 void IfStatement::execute()
@@ -120,31 +148,43 @@ void DeclarationStatement::execute()
     if (e->getKind()==ID_EXPRESSION){
         IdExpr *ie = (IdExpr*)e;
         string i = ie->id;
-        vars_type[i] = type_v;
-        vars_value[i] = 0;
-        cout<<" ID : "<<i<<"  Tipo: "<<vars_type[i]<<"\n";
+        if ( !existVar(i) ){
+            vars_type[i] = type_v;
+            vars_value[i] = 0;
+            cout<<" ID : "<<i<<"  Tipo: "<<vars_type[i]<<"\n";
+        }
+        else{
+            ErrorExpr *e = new ErrorExpr(SEMANTIC, " Redeclaration of ID: "+i, line);
+            e->show();
+        }
     } else {
         if (e->getKind()==ARRAY_EXPRESSION){
             ArrayExpr *ae = (ArrayExpr*)e;
             string i = ae->id;
-            if (ae->size > 0){
-                size_arrays[i] = ae->size;
-                vars_type[i] = type_v;
-                arrays_value[i] = new int[ae->size];
+            if ( ! existVar (i) ){
+                if (ae->size > 0){
+                    size_arrays[i] = ae->size;
+                    vars_type[i] = type_v;
+                    arrays_value[i] = new int[ae->size];
 
-                cout<<" ID: "<<i<<"  Tipo: "<<vars_type[i]<<"  Size: "<<size_arrays[i]<<"\n";
-                for (int y=0; y<size_arrays[i]; y++)
-                    arrays_value[i][y] = 0;
-                for (int j=0; j<size_arrays[i]; j++)
-                    cout<<" value["<<i<<"]["<<j<<"]: "<<arrays_value[i][j]<<"\n";
+                    cout<<" ID: "<<i<<"  Tipo: "<<vars_type[i]<<"  Size: "<<size_arrays[i]<<"\n";
+                    for (int y=0; y<size_arrays[i]; y++)
+                        arrays_value[i][y] = 0;
+                    for (int j=0; j<size_arrays[i]; j++)
+                        cout<<" value["<<i<<"]["<<j<<"]: "<<arrays_value[i][j]<<"\n";
+                }
+                else{
+                    ErrorExpr *_error = new ErrorExpr(SINTAX, " Expected size greater than zero", line);
+                  _error->show();
+                }
             }
             else{
-                ErrorExpr *_error = new ErrorExpr(SINTAX, " Expected size greater than zero");
-              _error->show();
+                ErrorExpr *e = new ErrorExpr(SEMANTIC, " Redeclaration of ID: "+i, line);
+                e->show();
             }
         }
         else{
-                ErrorExpr *_error = new ErrorExpr(SEMANTIC, " Expression not recognized");
+                ErrorExpr *_error = new ErrorExpr(SEMANTIC, " Expression not recognized", line);
                 _error->show();
         }
     }
@@ -176,17 +216,73 @@ void ProgramStatement::execute()
 void MethodStatement::execute()
 {
   printf("\n\nMethodStatement\n");
-
-  /*Type_v type;
-  string id;
-  ExprList *param;
-  Statement *block;*/
-
-  if ( (id == "MAIN") && v_main ){ // Es void
-    // definir main
+  if ( existMeth(id) ){
+      ErrorExpr *e = new ErrorExpr(SEMANTIC, "Redefinition of Method Id: "+id, line);
+      e->show();
   }
+  else{
+      if (type == VOID){
+          if (id == "MAIN"){
+              if (v_main){
+                ErrorExpr *e = new ErrorExpr(SEMANTIC, "Redefinition of VOID MAIN", line);
+                e->show();
+              }
+              else{
+                // definir main
+                  if (param == 0){
+                      v_main = true;
+                      methods_type[id] = type;
+                      block->execute();
+                  }
+                  else{
+                      ErrorExpr *e=new ErrorExpr(SEMANTIC, "Unexpected Parameters in Void Main\n", line);
+                      e->show();
+                  }
+              }
+          }
+          else{
+            // definir void id
+              methods_type[id] = type;
+              if (param > 0)
+                  DeclarationInMethod();
+              block->execute();
+           }
+         }
+      else{ // function
+          methods_type[id] = type;
+          if (param > 0)
+              DeclarationInMethod();
+          block->execute();
+        }
+  }
+}
 
+void MethodStatement::DeclarationInMethod()
+{
+  cout<<" DeclarationInMethod\n";
 
+  cout<<" Parameters in Method: "<<id<<"\n";
+  ExprList::iterator it = param->begin();
+  while (it != param->end()){
+    Expr *e = *it;
+    if (e->getKind()==ID_EXPRESSION){
+        IdExpr *ie = (IdExpr*)e;
+        string i = ie->id;
+        if ( !existVar(i) ){
+            vars_type_temp[i] = ie->t;
+            vars_value_temp[i] = 0;
+            cout<<" ID : "<<i<<"  Tipo: "<<vars_type_temp[i]<<"\n";
+        }
+        else{
+            ErrorExpr *e = new ErrorExpr(SEMANTIC, " Redeclaration of ID: "+i, line);
+            e->show();
+        }
+    } else {
+        ErrorExpr *e = new ErrorExpr(SEMANTIC, " Expression is not recognized.", line);
+        e->show();
+    }
+    it++;
+  }
 }
 
 void MethodCallStatement::execute()

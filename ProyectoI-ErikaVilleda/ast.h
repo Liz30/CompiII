@@ -10,11 +10,13 @@ using namespace std;
 
 enum Type_v { INT, BOOL, VOID, _NULL };
 enum Type_e { SINTAX, SEMANTIC };
+
 extern map<string, Type_v> vars_type; // id, tipo
 extern map<string, int> size_arrays; // id, size. el tipo esta en vars_type, este es solo para saber el size
 extern map<string, int> vars_value;  // id, valor
 extern map<string, int*> arrays_value; // id, int[];
 extern bool v_main;
+extern int line;
 
 class Expr;
 class Statement;
@@ -193,7 +195,7 @@ public:
 class StringExpr: public Expr {
 public:
     StringExpr(string &str) { this->str = str; }
-    int evaluate() { return 0 ; }
+    int evaluate() { return -1; }
     ExpressionKind getKind() {return STRING_EXPRESSION;}
     string str;
 };
@@ -212,7 +214,7 @@ public:
                                     this->id=id;
                                     this->size = size;
                                   }
-    int evaluate(){ return 0; } //Validar que size sea > 0
+    int evaluate(){ return arrays_value[id][size]; };
     ExpressionKind getKind(){return ARRAY_EXPRESSION; }
     string id;
     int size;
@@ -236,15 +238,16 @@ public:
 
 class ErrorExpr: public Expr{
 public:
-    ErrorExpr(Type_e t, string msg){
+    ErrorExpr(Type_e t, string msg, int l){
         this->t = t;
         this->msg = msg;
+        this->l = l;
     }
 
     int evaluate() { return 0;}
     ExpressionKind getKind() { return ERROR_EXPRESSION;}
     void show(){
-        cout<<getTxt()<<" Error. "<<msg<<"\n";
+        cout<<getTxt()<<" Error. "<<msg<<"\n";//Line: "<<l<<"\n";
     }
 
     string getTxt()
@@ -256,6 +259,7 @@ public:
 
     Type_e t;
     string msg;
+    int l;
 };
 
 
@@ -421,6 +425,7 @@ public:
                             }
   void execute();
   StatementKind getKind() { printf("%s\n", "getKind (METHOD_STATEMENT)");  return METHOD_STATEMENT; }
+  void DeclarationInMethod();
 
   Type_v type;
   string id;
@@ -428,6 +433,7 @@ public:
   Statement *block;
     // si es void, tener un flag o buscar en la lista de methodos si ya existe el void MAIN
 };
+
 
 class MethodCallStatement: public Statement{
 public:

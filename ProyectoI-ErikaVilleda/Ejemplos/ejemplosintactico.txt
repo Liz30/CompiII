@@ -5,7 +5,7 @@ class Program
    bool b1;
    int a1[50];
    bool b1[40];
-   int b[50];
+   int b1[50];
 
    void main()
    {

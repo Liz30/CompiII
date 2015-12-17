@@ -3,7 +3,7 @@ class GreatestCommonDivisor {
   int b = 20;
   int y, j, k;
   bool h;
-  int y = 9;
+//  int y = 9;
   bool n() {
     int x, y, z;
     bool f, t[8];
@@ -24,7 +24,7 @@ class GreatestCommonDivisor {
   //continue;
 
 // Función que calcula el máximo común divisor
-  int gcd(int a, int b) {
+  void gcd(int a, int b) {
     if (b == 0) {
       while(b<a) {
           print b;

@@ -1,13 +1,10 @@
 class Test {
   bool a, b;
   //bool o, i;
-  int a = 90;
+  int i = "Erika"; int m;
   //bool b = false;
   int c, h;
   //y[9] = 9;
-  void n(){
-
-  }
   void main()
   {
     int y;
