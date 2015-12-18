@@ -14,9 +14,7 @@ map<string, Type_v> methods_type; // Tipo de cada metodo
 map<string, string> methods_var; // idMethod, id. Variables de cada metodo
 map<string, int> methods_value; // IDMethod, value.  Valor que retorna cada metodo.
 map<string, Type_v> vars_type_temp;
-//map<string, int> size_arrays_temp; // el tipo esta en vars_type, este es solo para saber el size
 map<string, int> vars_value_temp; //contiene el valor de cada id, el resultado de evaluate()
-//map<string, int*> arrays_value_temp; // id, int[]. Valores de los arreglos
 map<string, string> vars_methods;
 
 map<string, int> methods_on;  // 1 activo, 0 inactivo (lugar libre)

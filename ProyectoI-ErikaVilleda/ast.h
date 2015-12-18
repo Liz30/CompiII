@@ -18,6 +18,9 @@ extern map<string, int*> arrays_value; // id, int[];
 extern bool v_main;
 extern int line;
 
+extern bool existVar(string id);
+extern bool existVarTemp(string id);
+
 class Expr;
 class Statement;
 typedef list<Expr*> ExprList;
@@ -75,7 +78,17 @@ public:
 
     ExpressionKind getKind() { return LESSTHAN_EXPRESSION; }
 
-    int evaluate() { return expr1->evaluate() < expr2->evaluate(); }
+    int evaluate() {
+      /*if (expr1->getKind()==ID_EXPRESSION)
+      if (existVar(expr1->id)) // Es Global
+        return vars_value[expr1->id];
+      if (existVarTemp(expr1->id))
+        return vars_value_temp[expr1->id];
+      ErrorExpr *e = new ErrorExpr(SEMANTIC, "ID: \'"+id+"\' is not found",line);
+      e->show();
+      return -1;*/
+
+      return expr1->evaluate() < expr2->evaluate(); }
 };
 
 class GTExpr: public BinaryExpr {
