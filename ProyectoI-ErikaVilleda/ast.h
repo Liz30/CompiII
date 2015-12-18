@@ -204,7 +204,7 @@ public:
 class BoolExpr: public Expr{
 public:
     BoolExpr(string value) { this->value = value; }
-    int evaluate() { if (value=="true") return 1; return 0;}
+    int evaluate() { if (value=="true") return 1; else return 0;}
     ExpressionKind getKind() { return BOOL_EXPRESSION;}
     string value;
 };
@@ -452,10 +452,10 @@ public:
   string id;
   ExprList *param;
   BlockStatement *block;
-  map<string, Type_v> vars_type_temp;
+  /*map<string, Type_v> vars_type_temp;
   map<string, int> size_arrays_temp; // el tipo esta en vars_type, este es solo para saber el size
   map<string, int> vars_value_temp; //contiene el valor de cada id, el resultado de evaluate()
-  map<string, int*> arrays_value_temp; // id, int[]. Valores de los arreglos
+  map<string, int*> arrays_value_temp; // id, int[]. Valores de los arreglos*/
     // si es void, tener un flag o buscar en la lista de methodos si ya existe el void MAIN
 };
 

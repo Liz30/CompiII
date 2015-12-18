@@ -13,12 +13,12 @@ class GreatestCommonDivisor {
     y = gcd(6, (4+t));
     print z;
     read d[9], r0, o[6];
-    print "Erika", r, k[78], t[t+4];
+    print "Erika", r;//, k[78], t[t+4];
     intbool();
     continue;
     break;
     {
-      t=9;
+      z=9;
     }
   }
   //continue;

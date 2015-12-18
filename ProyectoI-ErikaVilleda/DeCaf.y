@@ -190,7 +190,7 @@ st: assignmentE ';' { $$ = $1; }
   | KW_FOR '(' paramList ';' expr ';' assignEList  ')' block { $$ = new ForStatement($3, $5, $7, $9); }
   | KW_RETURN exprOPT ';' { $$ = new ReturnStatement($2); }
   | KW_BREAK ';' { $$ = new BreakStatement(); }
-  | KW_CONTINUE ';' {}
+  | KW_CONTINUE ';' { $$ = new ContinueStatement(); }
   | block { $$ = $1; }
 ;
 

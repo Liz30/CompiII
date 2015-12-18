@@ -13,21 +13,29 @@ bool v_main = false;
 map<string, Type_v> methods_type; // Tipo de cada metodo
 map<string, string> methods_var; // idMethod, id. Variables de cada metodo
 map<string, int> methods_value; // IDMethod, value.  Valor que retorna cada metodo.
-/*map<string, Type_v> vars_type_temp;
+map<string, Type_v> vars_type_temp;
 map<string, int> size_arrays_temp; // el tipo esta en vars_type, este es solo para saber el size
 map<string, int> vars_value_temp; //contiene el valor de cada id, el resultado de evaluate()
-map<string, int*> arrays_value_temp; // id, int[]. Valores de los arreglos */
+map<string, int*> arrays_value_temp; // id, int[]. Valores de los arreglos
 map<string, string> vars_methods;
 
 map<string, int> methods_on;  // 1 activo, 0 inactivo (lugar libre)
 string currentMethod;
 
-bool existVar(string id) {
+bool existVar(string id) {// Globales
     map<string, Type_v>::iterator it = vars_type.find(id);
     if (it != vars_type.end())
         return true;
     return false;
 }
+
+bool existVarTemp(string id) {// Temporales
+    map<string, string>::iterator it = vars_methods.find(id);
+    if (it != vars_methods.end())
+        return true;
+    return false;
+}
+
 
 bool existMeth(string id){
     map<string, Type_v>::iterator it = methods_type.find(id);
@@ -95,15 +103,31 @@ void AssignStatement::execute()
       DeclarationStatement *n = new DeclarationStatement(type_v, ne);
       n->execute();
     }
-    if ( existVar(id) ) { // La encontro
+    if ( existVar(id) ) { // La encontro, comparar si es arreglo. Global
         int result = expr->evaluate();
+        //if ()
         vars_value[id] = result;
         cout<<" ID : "<<id<<"  Tipo: "<<vars_type[id]<<"  Result: "<<vars_value[id]<<"\n";
     }
     else{
-        ErrorExpr *e = new ErrorExpr(SEMANTIC, " ID is not found\n", line);
-        e->show();
+        if ( existVarTemp(id) ) {//Es temporal
+          if (vars_methods[id] == currentMethod){
+              int result = expr->evaluate();
+              //if ()
+              vars_value_temp[id] = result;
+              cout<<" ID : "<<id<<"  Tipo: "<<vars_type_temp[id]<<"  Result: "<<vars_value_temp[id]<<"\n";
+          }
+          else{
+              ErrorExpr *e=new ErrorExpr(SEMANTIC, "CurrentMethod: \'"+currentMethod+"\' doesn't have ID: "+id, line);
+              e->show();
+          }
+        }
+        else{
+            ErrorExpr *e = new ErrorExpr(SEMANTIC, " ID: \'"+id+"\' is not found\n", line);
+            e->show();
+        }
     }
+    cout<<currentMethod<<"\n";
 }
 
 void AssignStatementArray::execute()
@@ -125,7 +149,6 @@ void AssignStatementArray::execute()
         arrays_value[id][p] = r;
         for (int j=0; j<size_arrays[id]; j++)
             cout<<" value["<<id<<"]["<<j<<"]: "<<arrays_value[id][j]<<"\n";
-
     }
   }
 }
@@ -145,9 +168,9 @@ void IfStatement::execute()
 void WhileStatement::execute()
 {
   printf("WhileStatement\n");
-  while (cond->evaluate()) {
-    block->execute();
-  }
+  //while (cond->evaluate()) {
+    //block->execute();
+  //}
 }
 
 void ForStatement::execute()
@@ -187,7 +210,7 @@ void DeclarationStatement::execute() // Variables Globales
                 if (ae->size > 0){
                     size_arrays[i] = ae->size;
                     vars_type[i] = type_v;
-                    arrays_value[i] = new int[ae->size];
+                    arrays_value[i] = new int[ae->size]; // arreglo[size]
                     methods_var["class"] = i;
                     vars_methods[i] = "class";
 
@@ -223,7 +246,6 @@ void ProgramStatement::execute()
   StatementList::iterator it = header->begin();
   while (it != header->end()) {
     Statement *st = *it;
-
     st->execute();
     it++;
   }
@@ -268,7 +290,18 @@ void MethodStatement::execute()
                               inMethod(nst->type_v, nst->ilist);
                               itt++;
                           }
-                          //block->execute();
+                      }
+                      if ( block->stList == 0){
+                        WarningExpr *w = new WarningExpr("There are not Code Block", line);
+                        w->show();
+                      }
+                      else{
+                          StatementList::iterator itt = block->stList->begin();
+                          while ( itt != block->stList->end()){
+                              Statement *nst = *itt;
+                              nst->execute();
+                              itt++;
+                          }
                       }
                   }
                   else{
@@ -294,12 +327,24 @@ void MethodStatement::execute()
                       inMethod(nst->type_v, nst->ilist);
                       itt++;
                   }
-                  //block->execute();
+              }
+              if ( block->stList == 0){
+                WarningExpr *w = new WarningExpr("There are not Code Block", line);
+                w->show();
+              }
+              else{
+                  StatementList::iterator itt = block->stList->begin();
+                  while ( itt != block->stList->end()){
+                      Statement *nst = *itt;
+                      nst->execute();
+                      itt++;
+                  }
               }
            }
          }
       else{ // function
           methods_type[id] = type;
+          currentMethod = id;
           if (param > 0)
               SetParamenters(param);
           if (block->declaration == 0){
@@ -313,7 +358,18 @@ void MethodStatement::execute()
                   inMethod(nst->type_v, nst->ilist);
                   itt++;
               }
-              //block->execute();
+          }
+          if ( block->stList == 0){
+            WarningExpr *w = new WarningExpr("There are not Code Block", line);
+            w->show();
+          }
+          else{
+              StatementList::iterator itt = block->stList->begin();
+              while ( itt != block->stList->end()){
+                  Statement *nst = *itt;
+                  nst->execute();
+                  itt++;
+              }
           }
         }
   }
@@ -321,7 +377,7 @@ void MethodStatement::execute()
 
 void MethodStatement::SetParamenters(ExprList *eL)
 {
-  cout<<" DeclarationInMethod\n";
+  cout<<" SetParamenters\n";
 
   cout<<" Parameters in Method: "<<id<<"\n";
   ExprList::iterator it = eL->begin();
@@ -330,7 +386,7 @@ void MethodStatement::SetParamenters(ExprList *eL)
     if (e->getKind()==ID_EXPRESSION){
         IdExpr *ie = (IdExpr*)e;
         string i = ie->id;
-        if ( !existVar(i) ){
+        if ( !existVar(i) ){ // No es global
             vars_type_temp[i] = ie->t;
             vars_value_temp[i] = 0;
             methods_var[id] = i;
@@ -372,15 +428,24 @@ void MethodStatement::inMethod(Type_v type, ExprList *eL)
               IdExpr *ie = (IdExpr*)e;
               string i = ie->id;
               if ( !existVar(i) && !existVarTemp(i) ) {
-                  vars_type_temp[i] = type;
-                  vars_value_temp[i] = 0;
-                  methods_var[id] = i;
-                  vars_methods[i] = id;
-                  cout<<"     ID : "<<i<<"  Tipo: "<<vars_type_temp[i]<<"\n";
+                      vars_type_temp[i] = type;
+                      vars_value_temp[i] = 0;
+                      methods_var[id] = i;
+                      vars_methods[i] = id;
+                      cout<<"     ID : "<<i<<"  Tipo: "<<vars_type_temp[i]<<"\n";
               }
               else{
-                  ErrorExpr *e = new ErrorExpr(SEMANTIC, " Redeclaration of ID: "+i, line);
-                  e->show();
+                  if ( existVarTemp(i) && (vars_methods[i] != currentMethod)){
+                      vars_type_temp[i] = type;
+                      vars_value_temp[i] = 0;
+                      methods_var[id] = i;
+                      vars_methods[i] = id;
+                      cout<<"     ID : "<<i<<"  Tipo: "<<vars_type_temp[i]<<"\n";
+                  }
+                  else{
+                      ErrorExpr *e = new ErrorExpr(SEMANTIC, " Redeclaration of ID: "+i, line);
+                      e->show();
+                  }
               }
           }
           else{
@@ -391,7 +456,6 @@ void MethodStatement::inMethod(Type_v type, ExprList *eL)
       }
     }
 }
-
 
 void MethodCallStatement::execute()
 {

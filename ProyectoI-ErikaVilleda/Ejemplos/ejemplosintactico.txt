@@ -27,6 +27,7 @@ class Program
    int max(int op)
    {
       int tmp;
+      int miMax;
       tmp = 0;
       miMax = 0;
       while (tmp < 50)

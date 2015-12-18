@@ -4,28 +4,31 @@ class Test {
   int i = "Erika"; int m;
   //bool b = false;
   int c, h;
-  int y;
+  int y[9];
   //y[9] = 9;
   void main()
   {
-    int a;
-    //y[8] = 9 ;
-    y = 3;
+    //int y[9];
+    y[8] = 9 ;
+    //y = 3;
+    //nada = 90;
+    //print y[8];
   }
 
   void g (int u){
     int u;
     bool f;
+    f = true;
   }
 
   bool is(int d){
     int f;
     int u;
-    f = false;  // No declarada, bugs es que f en g() la declara global
+    f = 10;  // No declarada, bugs es que f en g() la declara global
   }
 
   void test(){
-    bool u;
+      print f;
   }
 
 }
