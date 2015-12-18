@@ -186,7 +186,7 @@ public:
 class IdExpr: public Expr {
 public:
     IdExpr(Type_v t, string id) { this->t = t; this->id = id; }
-    int evaluate() { return vars_value[id]; }
+    int evaluate(); //{ return vars_value[id]; } // evaluar temporales
     ExpressionKind getKind() {return ID_EXPRESSION;}
 
     Type_v t;
@@ -204,9 +204,11 @@ public:
 class BoolExpr: public Expr{
 public:
     BoolExpr(string value) { this->value = value; }
+    BoolExpr(int valInt) { this -> valInt = valInt; }
     int evaluate() { if (value=="true") return 1; else return 0;}
     ExpressionKind getKind() { return BOOL_EXPRESSION;}
     string value;
+    int valInt;
 };
 
 class ArrayExpr: public Expr{

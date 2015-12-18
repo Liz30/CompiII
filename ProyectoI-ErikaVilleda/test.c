@@ -5,7 +5,7 @@ class Test {
   //bool b = false;
   int c, h;
   int y[9];
-  //y[9] = 9;
+  //y[6] = 30;
   void main()
   {
     //int y[9];
@@ -19,12 +19,16 @@ class Test {
     int u;
     bool f;
     f = true;
+    y[3]=100;
+
+    print f;
   }
 
   bool is(int d){
     int f;
     int u;
     f = 10;  // No declarada, bugs es que f en g() la declara global
+    print  f;
   }
 
   void test(){

@@ -14,9 +14,9 @@ map<string, Type_v> methods_type; // Tipo de cada metodo
 map<string, string> methods_var; // idMethod, id. Variables de cada metodo
 map<string, int> methods_value; // IDMethod, value.  Valor que retorna cada metodo.
 map<string, Type_v> vars_type_temp;
-map<string, int> size_arrays_temp; // el tipo esta en vars_type, este es solo para saber el size
+//map<string, int> size_arrays_temp; // el tipo esta en vars_type, este es solo para saber el size
 map<string, int> vars_value_temp; //contiene el valor de cada id, el resultado de evaluate()
-map<string, int*> arrays_value_temp; // id, int[]. Valores de los arreglos
+//map<string, int*> arrays_value_temp; // id, int[]. Valores de los arreglos
 map<string, string> vars_methods;
 
 map<string, int> methods_on;  // 1 activo, 0 inactivo (lugar libre)
@@ -36,12 +36,25 @@ bool existVarTemp(string id) {// Temporales
     return false;
 }
 
-
 bool existMeth(string id){
     map<string, Type_v>::iterator it = methods_type.find(id);
     if ( it != methods_type.end())
         return true;
     return false;
+}
+
+bool isArray(string id){
+  map<string, int>::iterator it = size_arrays.find(id);
+  if ( it != size_arrays.end())
+      return true;
+  return false;
+}
+
+int IdExpr::evaluate()
+{
+    if (existVar(id)) // Es Global
+      return vars_value[id];
+    return vars_value_temp[id];
 }
 
 void BlockStatement::execute()
@@ -85,12 +98,31 @@ void PrintStatement::execute()
 
     while (it != expr->end()) {
       Expr *ex = *it;
-
-      result=ex->evaluate();
-      printf("%d\n", result);
+      if (ex->getKind()==ID_EXPRESSION){
+          IdExpr *nuevo = (IdExpr*)ex;
+          if (isArray(nuevo->id)){
+              int s = size_arrays[nuevo->id];
+              for(int o=0; o<s; o++ ){
+                  cout<<"["<<nuevo->id<<"]["<<o<<"]: "<<arrays_value[nuevo->id][o]<<"\n";
+              }
+          }
+          else{
+              if (vars_methods[nuevo->id]==currentMethod){
+                  result = ex->evaluate();
+                  cout<<"Result: "<<result<<"\n";
+              }
+              else{
+                  ErrorExpr *e = new ErrorExpr(SEMANTIC, "ID: \'"+nuevo->id+"\' is not found", line);
+                  e->show();
+              }
+          }
+      }
+      else{
+          result = ex->evaluate();
+          cout<<"Result: "<<result<<"\n";
+      }
       it++;
     }
-    printf("\n");
 }
 
 void AssignStatement::execute()
@@ -105,7 +137,6 @@ void AssignStatement::execute()
     }
     if ( existVar(id) ) { // La encontro, comparar si es arreglo. Global
         int result = expr->evaluate();
-        //if ()
         vars_value[id] = result;
         cout<<" ID : "<<id<<"  Tipo: "<<vars_type[id]<<"  Result: "<<vars_value[id]<<"\n";
     }
@@ -113,7 +144,6 @@ void AssignStatement::execute()
         if ( existVarTemp(id) ) {//Es temporal
           if (vars_methods[id] == currentMethod){
               int result = expr->evaluate();
-              //if ()
               vars_value_temp[id] = result;
               cout<<" ID : "<<id<<"  Tipo: "<<vars_type_temp[id]<<"  Result: "<<vars_value_temp[id]<<"\n";
           }
@@ -127,7 +157,7 @@ void AssignStatement::execute()
             e->show();
         }
     }
-    cout<<currentMethod<<"\n";
+//    cout<<currentMethod<<"\n";
 }
 
 void AssignStatementArray::execute()
@@ -138,7 +168,7 @@ void AssignStatementArray::execute()
     e->show();
   }
   else{
-    if ( !existVar(id) ){
+    if ( !existVar(id) ){ // Tiene que ser global
           ErrorExpr *e = new ErrorExpr(SEMANTIC, " ID: "+id+" is not found \n", line);
           e->show();
     }
@@ -146,9 +176,15 @@ void AssignStatementArray::execute()
         int r = expr->evaluate();
         int p = pos->evaluate();
         // Evaluar tipo??
-        arrays_value[id][p] = r;
-        for (int j=0; j<size_arrays[id]; j++)
-            cout<<" value["<<id<<"]["<<j<<"]: "<<arrays_value[id][j]<<"\n";
+        if (p >= size_arrays[id]){
+           ErrorExpr *e = new ErrorExpr(SEMANTIC, "Position is greater than size of \'"+id+"\'", line);
+           e->show();
+        }
+        else{
+            arrays_value[id][p] = r;
+            for (int j=0; j<size_arrays[id]; j++)
+                cout<<" value["<<id<<"]["<<j<<"]: "<<arrays_value[id][j]<<"\n";
+        }
     }
   }
 }
