@@ -114,7 +114,9 @@ class EQExpr: public BinaryExpr {
 public:
     EQExpr(Expr *expr1, Expr *expr2): BinaryExpr(expr1, expr2) {}
 
-    int evaluate() { return expr1->evaluate() == expr2->evaluate(); }
+    int evaluate() {
+    //  cout<<"Expr1: "<<expr1->getKind()<<"   Expr2: "<<expr2->getKind()<<"\n";
+      return expr1->evaluate() == expr2->evaluate(); }
     ExpressionKind getKind() {return EQUAL_EXPRESSION; }
 };
 
@@ -406,6 +408,19 @@ public:
       Statement *block;
 };
 
+class DeclarationTemp: public Statement{
+public:
+    DeclarationTemp(Type_v type_v, ExprList *ilist){
+        this -> type_v = type_v;
+        this-> ilist = ilist; //validar que sean expression id
+    }
+    void execute();
+    StatementKind getKind() { return DECLARATION_STATEMENT; }
+
+    Type_v type_v;
+    ExprList *ilist;
+};
+
 class DeclarationStatement: public Statement{
 public:
     DeclarationStatement(Type_v type_v, ExprList *ilist){
@@ -414,7 +429,6 @@ public:
     }
     void execute();
     StatementKind getKind() { return DECLARATION_STATEMENT; }
-    //void inMethod(string id, ExprList *list);
 
     Type_v type_v;
     ExprList *ilist;
@@ -447,18 +461,12 @@ public:
   void execute();
   StatementKind getKind() { printf("%s\n", "getKind (METHOD_STATEMENT)");  return METHOD_STATEMENT; }
   void SetParamenters(ExprList *eL);
-  void inMethod(Type_v type, ExprList *eL);
   bool existVarTemp(string idVar);
 
   Type_v type;
   string id;
   ExprList *param;
   BlockStatement *block;
-  /*map<string, Type_v> vars_type_temp;
-  map<string, int> size_arrays_temp; // el tipo esta en vars_type, este es solo para saber el size
-  map<string, int> vars_value_temp; //contiene el valor de cada id, el resultado de evaluate()
-  map<string, int*> arrays_value_temp; // id, int[]. Valores de los arreglos*/
-    // si es void, tener un flag o buscar en la lista de methodos si ya existe el void MAIN
 };
 
 

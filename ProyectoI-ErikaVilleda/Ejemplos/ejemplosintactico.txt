@@ -7,14 +7,15 @@ class Program
 
    void main()
    {
-      int a, c;
+      int a, c, op;
       bool s,t;
 
       a = callout(max(r[(6+0999)*i]),b);
-      if (a < 100 && a > 10)
+      //if (a < 100 && a > 10)
       {
          s = true;
          t = false;
+         print op;
       }
    }
 

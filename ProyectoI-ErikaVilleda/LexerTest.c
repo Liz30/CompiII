@@ -25,7 +25,8 @@ class GreatestCommonDivisor {
 
 // Función que calcula el máximo común divisor
   void gcd(int a, int b) {
-    if (b == 0) {
+    if (b == 20) {
+      print 100000000;
       while(b<a) {
           print b;
           b=(b+1)+7;

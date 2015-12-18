@@ -8,11 +8,14 @@ class Test {
   //y[6] = 30;
   void main()
   {
+    bool test;
     //int y[9];
     y[8] = 9 ;
     //y = 3;
     //nada = 90;
     //print y[8];
+
+    test = false;
   }
 
   void g (int u){
@@ -21,7 +24,7 @@ class Test {
     f = true;
     y[3]=100;
 
-    print f;
+    print test;
   }
 
   bool is(int d){
@@ -33,6 +36,7 @@ class Test {
 
   void test(){
       print f;
+      print y;
   }
 
 }

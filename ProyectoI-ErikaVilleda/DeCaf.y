@@ -39,9 +39,9 @@ Statement *input;
 %token TK_NEG TK_BIZQ TK_BDER OP_AND OP_OR OP_LT OP_LTE OP_NE OP_GT OP_GTE
 %type<t> t_var
 %type<expr_t> expra expr term factor argument arrayE exprOPT functionCall
-%type<statement_t>  assignmentH declaration header method  st block elseOPT
+%type<statement_t>  assignmentH declaration header method  st block elseOPT declarationTemp
 %type<statement_t> assignmentE method_call
-%type<sList_t> headerList methodsList declarationList stList assignEList
+%type<sList_t> headerList methodsList  stList assignEList declarationListTemp
 %type<eList_t> elist argumentList paramList idL
 %type<num_t> array
 %type<id_t> idVOID
@@ -79,16 +79,7 @@ t_var: KW_INT { $$ = INT; }
     | KW_BOOL { $$ = BOOL; }
 ;
 
-declarationList: declarationList declaration {
-                                                $$ = $1;
-                                                $$->push_back($2);
-                                              }
-              | declaration {
-                              $$ = new StatementList;
-                              $$->push_back($1);
-                            }
-              |             { $$ = 0; }
-;
+
 
 declaration: t_var elist ';' {
                                   $$ = new DeclarationStatement($1, $2);
@@ -166,10 +157,25 @@ argument: t_var ID {
                     }
 ;
 
-block:  '{' declarationList stList '}' {
+block:  '{' declarationListTemp stList '}' {
                                           $$ = new BlockStatement($2, $3);
                                        }
 ;
+
+declarationListTemp: declarationListTemp declarationTemp {
+                                                $$ = $1;
+                                                $$->push_back($2);
+                                              }
+              | declarationTemp {
+                              $$ = new StatementList;
+                              $$->push_back($1);
+                            }
+              |             { $$ = 0; }
+;
+
+declarationTemp: t_var elist ';' {
+                                  $$ = new DeclarationTemp($1, $2);
+                              }
 
 stList: stList st {
                     $$ = $1;
