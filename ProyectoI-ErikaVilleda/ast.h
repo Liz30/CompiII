@@ -46,7 +46,8 @@ enum ExpressionKind
   BOOL_EXPRESSION,
   ARRAY_EXPRESSION,
   FUNCTION_EXPRESSION,
-  ERROR_EXPRESSION
+  ERROR_EXPRESSION,
+  WARNING_EXPRESSION
 };
 
 
@@ -262,6 +263,23 @@ public:
     int l;
 };
 
+class WarningExpr: public Expr{
+public:
+    WarningExpr(string msg, int l){
+        this->msg = msg;
+        this->l = l;
+    }
+
+    int evaluate() { return 0;}
+    ExpressionKind getKind() { return WARNING_EXPRESSION;}
+    void show(){
+        cout<<" Warning. "<<msg<<"\n";//Line: "<<l<<"\n";
+    }
+
+    string msg;
+    int l;
+};
+
 
 enum StatementKind {
     BLOCK_STATEMENT,
@@ -394,6 +412,7 @@ public:
     }
     void execute();
     StatementKind getKind() { return DECLARATION_STATEMENT; }
+    //void inMethod(string id, ExprList *list);
 
     Type_v type_v;
     ExprList *ilist;
@@ -421,18 +440,25 @@ public:
                               this->type = type;
                               this->id = id;
                               this->param = param;
-                              this->block = block;
+                              this->block = (BlockStatement*)block;
                             }
   void execute();
   StatementKind getKind() { printf("%s\n", "getKind (METHOD_STATEMENT)");  return METHOD_STATEMENT; }
-  void DeclarationInMethod();
+  void SetParamenters(ExprList *eL);
+  void inMethod(Type_v type, ExprList *eL);
+  bool existVarTemp(string idVar);
 
   Type_v type;
   string id;
   ExprList *param;
-  Statement *block;
+  BlockStatement *block;
+  map<string, Type_v> vars_type_temp;
+  map<string, int> size_arrays_temp; // el tipo esta en vars_type, este es solo para saber el size
+  map<string, int> vars_value_temp; //contiene el valor de cada id, el resultado de evaluate()
+  map<string, int*> arrays_value_temp; // id, int[]. Valores de los arreglos
     // si es void, tener un flag o buscar en la lista de methodos si ya existe el void MAIN
 };
+
 
 
 class MethodCallStatement: public Statement{

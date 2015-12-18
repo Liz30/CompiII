@@ -4,8 +4,6 @@ class Program
    int i,j,k;
    bool b1;
    int a1[50];
-   bool b1[40];
-   int b1[50];
 
    void main()
    {
@@ -22,10 +20,11 @@ class Program
 
    void min (int y, bool g)
    {
+      bool op;
       print "Erika";
    }
 
-   int max(int x)
+   int max(int op)
    {
       int tmp;
       tmp = 0;

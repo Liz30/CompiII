@@ -9,7 +9,7 @@ class GreatestCommonDivisor {
     bool f, t[8];
     x = a;
     y = b;
-    y[8+3] = (m+7)*3;
+    //y[8+3] = (m+7)*3;
     y = gcd(6, (4+t));
     print z;
     read d[9], r0, o[6];
